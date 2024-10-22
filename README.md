@@ -1,4 +1,4 @@
-# API Wrapper para Directus PDN
+# API Wrapper para el s3 v2
 
 API wrapper para consultar diferentes instancias de del API de interconexión del S3(v2) de la Plataforma Digital Nacional. Este wrapper permite realizar consultas a las siguientes colecciones:
 
@@ -69,7 +69,7 @@ GET /{collection}/{providerId}
 Parámetros de consulta soportados:
 - `page`: Número de página (default: 1)
 - `limit`: Registros por página (default: 10)
-- `filter`: Filtros de Directus
+- `filter`: Filtros
 
 Ejemplo de consulta con filtros:
 ```
