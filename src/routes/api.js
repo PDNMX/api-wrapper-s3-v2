@@ -4,6 +4,22 @@ const express = require('express');
 const router = express.Router();
 const DirectusWrapper = require('../services/DirectusWrapper');
 
+// Endpoint para listar providers
+router.get('/providers', (req, res) => {
+  try {
+    const providers = DirectusWrapper.getProvidersList();
+    res.json({
+      success: true,
+      data: providers
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 router.get('/:collection/:providerId', async (req, res) => {
   // Log para ver los parámetros recibidos
   /* console.log('Route Parameters:', req.params);
@@ -18,7 +34,7 @@ router.get('/:collection/:providerId', async (req, res) => {
       providerId,
       query
     );
-    
+
     if (response.success) {
       res.json(response);
     } else {

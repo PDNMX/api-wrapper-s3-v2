@@ -16,7 +16,10 @@ const validateProviders = (providers) => {
     if (!provider.token) {
       throw new Error(`Provider ${provider.providerId} is missing token`);
     }
-    
+    if (!provider.name) {
+      throw new Error(`Provider ${provider.providerId} is missing name`);
+    }
+
     // Validar formato de endpoint
     try {
       new URL(provider.endpoint);
@@ -25,35 +28,23 @@ const validateProviders = (providers) => {
     }
   });
 
-  // Verificar IDs únicos
-  const ids = providers.map(p => p.providerId);
-  const uniqueIds = new Set(ids);
-  if (ids.length !== uniqueIds.size) {
-    throw new Error('All provider IDs must be unique');
-  }
-
   return providers;
 };
 
 const getProvidersFromEnv = () => {
   try {
     const providersEnv = process.env.API_PROVIDERS;
-    
+
     if (!providersEnv) {
       throw new Error('API_PROVIDERS environment variable is not defined');
     }
 
-    // Limpiar el string de posibles caracteres especiales
-    const cleanJson = providersEnv.trim();
-    
-    try {
-      const providers = JSON.parse(cleanJson);
-      return validateProviders(providers);
-    } catch (parseError) {
-      console.error('Raw API_PROVIDERS value:', providersEnv);
-      throw new Error(`Failed to parse API_PROVIDERS as JSON: ${parseError.message}`);
-    }
+    const providers = JSON.parse(providersEnv);
+    return validateProviders(providers);
   } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error('API_PROVIDERS environment variable contains invalid JSON');
+    }
     throw error;
   }
 };

@@ -16,6 +16,14 @@ class DirectusWrapper {
     });
   }
 
+  getProvidersList() {
+    // Convertir el Map de providers a un array con solo id y name
+    return Array.from(this.providers.values()).map(provider => ({
+      id: provider.providerId,
+      name: provider.name
+    }));
+  }
+
   getProviderConfig(providerId) {
     return this.providers.get(providerId) || null;
   }
@@ -46,7 +54,7 @@ class DirectusWrapper {
     } */
     console.log('==================');
   }
-  
+
   logResponse(response, providerId) {
     console.log('\n=== API Response ===');
     console.log('Provider:', providerId);
@@ -63,48 +71,48 @@ class DirectusWrapper {
           error: `Invalid collection: ${collection}`
         };
       }
-  
+
       const config = this.getProviderConfig(providerId);
-      
+
       if (!config) {
         return {
           success: false,
           error: `Provider ${providerId} not found`
         };
       }
-  
+
       const pagination = this.parsePaginationParams(query);
-  
+
       // Construir la URL base
       const url = new URL(`${config.endpoint}/items/${collection}`);
-      
+
       // Agregar parámetros base
       url.searchParams.append('fields', '*.*.*');
       url.searchParams.append('limit', pagination.limit.toString());
       url.searchParams.append('offset', pagination.offset.toString());
-  
+
       // Manejar filtros si existen
       if (query.filter) {
         const filterStr = JSON.stringify(query.filter);
         url.searchParams.append('filter', filterStr);
       }
-  
+
       // Log de la petición incluyendo el providerId
       this.logRequest(url, query, providerId);
-  
+
       // Realizar la consulta
       const response = await axios.get(url.toString(), {
         headers: {
           'Authorization': `Bearer ${config.token}`
         }
       });
-  
+
       // Log de la respuesta incluyendo el providerId
       this.logResponse(response, providerId);
-  
+
       const totalItems = response.data.meta?.total_count || response.data.data.length;
       const totalPages = Math.ceil(totalItems / pagination.limit);
-  
+
       return {
         success: true,
         data: response.data.data,
@@ -118,7 +126,7 @@ class DirectusWrapper {
           hasPrevPage: pagination.page > 1
         }
       };
-  
+
     } catch (error) {
       console.error('\n=== API Error ===');
       console.error('Provider:', providerId);
@@ -127,7 +135,7 @@ class DirectusWrapper {
         console.error('Response Data:', JSON.stringify(error.response.data, null, 2));
       }
       console.error('================\n');
-  
+
       return {
         success: false,
         error: error.response?.data?.errors?.[0]?.message || error.message

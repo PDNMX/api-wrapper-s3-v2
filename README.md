@@ -128,7 +128,7 @@ El sistema proporciona logs detallados de las peticiones:
 
 ```
 === API Request ===
-Provider: ejemploProveedor
+Provider: provider1
 Endpoint: https://api.example.com/items/collection?fields=*.*.*&limit=10&offset=0
 ==================
 ```
