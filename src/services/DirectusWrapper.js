@@ -82,12 +82,22 @@ class DirectusWrapper {
       }
 
       const pagination = this.parsePaginationParams(query);
+      const excludeNull = query.excludeNull === 'true';
 
       // Construir la URL base
       const url = new URL(`${config.endpoint}/items/${collection}`);
 
-      // Agregar parámetros base
-      url.searchParams.append('fields', '*.*.*');
+      // Configurar los fields según si se excluyen nulls
+      if (excludeNull) {
+        url.searchParams.append('fields', '*,!*.{null}');
+      } else {
+        url.searchParams.append('fields', '*.*.*');
+      }
+
+      // Agregar metadatos específicos de Directus
+      url.searchParams.append('meta', '*');
+
+      // Agregar parámetros de paginación
       url.searchParams.append('limit', pagination.limit.toString());
       url.searchParams.append('offset', pagination.offset.toString());
 
@@ -97,33 +107,32 @@ class DirectusWrapper {
         url.searchParams.append('filter', filterStr);
       }
 
-      // Log de la petición incluyendo el providerId
-      this.logRequest(url, query, providerId);
+      this.logRequest(url, { ...query, excludeNull }, providerId);
 
-      // Realizar la consulta
       const response = await axios.get(url.toString(), {
         headers: {
           'Authorization': `Bearer ${config.token}`
         }
       });
 
-      // Log de la respuesta incluyendo el providerId
       this.logResponse(response, providerId);
 
-      const totalItems = response.data.meta?.total_count || response.data.data.length;
+      // Obtener el total de items desde los metadatos
+      const totalItems = response.data.meta?.filter_count || 0;
       const totalPages = Math.ceil(totalItems / pagination.limit);
+      const currentPage = Math.floor(pagination.offset / pagination.limit) + 1;
 
       return {
         success: true,
         data: response.data.data,
         meta: response.data.meta,
         pagination: {
-          page: pagination.page,
+          page: currentPage,
           limit: pagination.limit,
           totalItems,
           totalPages,
-          hasNextPage: pagination.page < totalPages,
-          hasPrevPage: pagination.page > 1
+          hasNextPage: currentPage < totalPages,
+          hasPrevPage: currentPage > 1
         }
       };
 
